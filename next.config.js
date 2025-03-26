@@ -7,9 +7,7 @@ const nextConfig = {
   },
   publicRuntimeConfig: {
     // Configurations accessibles côté client et serveur
-    API_URL: process.env.NODE_ENV === 'production' 
-      ? 'https://votre-domaine.com/api' 
-      : 'http://localhost:3000/api',
+    API_URL: process.env.API_URL || 'http://localhost:3000/api',
   },
   env: {
     // Variables d'environnement accessibles côté client et serveur
@@ -30,6 +28,8 @@ const nextConfig = {
     }
     return config;
   },
+  // Assurer que l'output est configuré pour Vercel
+  distDir: '.next',
 }
 
 module.exports = nextConfig 
