@@ -247,8 +247,10 @@ export default function AgendaPage() {
   
   // Annuler la planification d'une tâche
   const handleUnscheduleTask = async (zone, titre) => {
+    console.log("Déplanification de la tâche:", zone, titre);
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
+      // Utiliser uniquement l'API
+      const response = await fetch(`/api/tasks/${encodeURIComponent(zone)}/${encodeURIComponent(titre)}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -258,38 +260,62 @@ export default function AgendaPage() {
         }),
       });
       
-      if (response.ok) {
-        // Recharger les tâches planifiées et non planifiées
-        const [scheduledRes, tasksRes] = await Promise.all([
-          fetch('/api/schedule'),
-          fetch('/api/tasks'),
-        ]);
-        
-        const [scheduledData, tasksData] = await Promise.all([
-          scheduledRes.json(),
-          tasksRes.json(),
-        ]);
-        
-        setScheduledTasks(scheduledData);
-        setAllTasks(tasksData);
-        
-        // Mettre à jour les tâches non planifiées
-        const unscheduled = tasksData.filter(task => !task.date_début);
-        setUnscheduledTasks(unscheduled);
-        
-        // Mettre à jour les tâches pour le jour sélectionné
-        if (selectedDay) {
-          const tasksForDay = scheduledData.filter(task => {
-            const taskStartDate = dayjs(task.date_début);
-            const taskEndDate = dayjs(task.date_fin);
-            return selectedDay.isAfter(taskStartDate.subtract(1, 'day')) && selectedDay.isBefore(taskEndDate.add(1, 'day'));
-          });
+      // Vérifier le type de contenu de la réponse
+      const contentType = response.headers.get('content-type');
+      console.log("Type de contenu de la réponse:", contentType);
+      
+      if (contentType && contentType.includes('application/json')) {
+        if (response.ok) {
+          const jsonResponse = await response.json();
+          console.log("Réponse de déplanification:", jsonResponse);
+          console.log("Déplanification réussie!");
           
-          setTasksForSelectedDay(tasksForDay);
+          // Recharger les tâches planifiées et non planifiées
+          const [scheduledRes, tasksRes] = await Promise.all([
+            fetch('/api/schedule'),
+            fetch('/api/tasks'),
+          ]);
+          
+          if (scheduledRes.ok && tasksRes.ok) {
+            const scheduledData = await scheduledRes.json();
+            const tasksData = await tasksRes.json();
+            
+            setScheduledTasks(scheduledData);
+            setAllTasks(tasksData);
+            
+            // Mettre à jour les tâches non planifiées
+            const unscheduled = tasksData.filter(task => !task.date_début);
+            setUnscheduledTasks(unscheduled);
+            
+            // Mettre à jour les tâches pour le jour sélectionné
+            if (selectedDay) {
+              const tasksForDay = scheduledData.filter(task => {
+                const taskStartDate = dayjs(task.date_début);
+                const taskEndDate = dayjs(task.date_fin);
+                return selectedDay.isAfter(taskStartDate.subtract(1, 'day')) && selectedDay.isBefore(taskEndDate.add(1, 'day'));
+              });
+              
+              setTasksForSelectedDay(tasksForDay);
+            }
+          } else {
+            console.error("Erreur lors du rechargement des données:", 
+              scheduledRes.status, tasksRes.status);
+            alert("Erreur lors du rechargement des données après déplanification");
+          }
+        } else {
+          const errorData = await response.json();
+          console.error("Erreur de déplanification:", errorData);
+          alert(`Erreur lors de la déplanification: ${JSON.stringify(errorData)}`);
         }
+      } else {
+        // Si le contenu n'est pas du JSON, afficher le texte de la réponse
+        const textResponse = await response.text();
+        console.error("Réponse non-JSON reçue:", textResponse.substring(0, 150) + "...");
+        alert("Erreur: La réponse du serveur n'est pas au format JSON. Vérifiez la console pour plus de détails.");
       }
     } catch (error) {
       console.error('Erreur lors de la déplanification de la tâche:', error);
+      alert(`Erreur lors de la déplanification: ${error.message}`);
     }
   };
   
@@ -508,6 +534,14 @@ export default function AgendaPage() {
                     task={task}
                     onStatusChange={handleStatusChange}
                     onUnschedule={handleUnscheduleTask}
+                    onDelete={(zone, titre) => {
+                      // Rediriger vers la page des travaux pour la suppression
+                      alert("Pour supprimer une tâche, veuillez utiliser la page 'Liste des travaux'");
+                    }}
+                    onEdit={(zone, titre, updatedTask) => {
+                      // Rediriger vers la page des travaux pour l'édition
+                      alert("Pour modifier une tâche, veuillez utiliser la page 'Liste des travaux'");
+                    }}
                   />
                 ))
               ) : (
