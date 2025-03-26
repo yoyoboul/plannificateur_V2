@@ -43,6 +43,7 @@ export default async function handler(req, res) {
     case 'PATCH':
       try {
         const { action, ...data } = req.body;
+        console.log('PATCH request:', { zone, titre, action, data });
         
         if (action === 'updateStatus') {
           const { status } = data;
@@ -63,18 +64,26 @@ export default async function handler(req, res) {
           }
         } 
         else if (action === 'unschedule') {
-          const success = await unscheduleTask(zone, titre);
-          if (success) {
-            res.status(200).json({ success: true, message: 'Planification supprimée avec succès' });
-          } else {
-            res.status(404).json({ error: 'Tâche non trouvée' });
+          console.log('Tentative de déplanification pour:', { zone, titre });
+          try {
+            const success = await unscheduleTask(zone, titre);
+            console.log('Résultat de la déplanification:', success);
+            if (success) {
+              res.status(200).json({ success: true, message: 'Planification supprimée avec succès' });
+            } else {
+              res.status(404).json({ error: 'Tâche non trouvée' });
+            }
+          } catch (unscheduleError) {
+            console.error('Erreur lors de la déplanification:', unscheduleError);
+            res.status(500).json({ error: `Erreur lors de la déplanification: ${unscheduleError.message}` });
           }
         } 
         else {
           res.status(400).json({ error: 'Action non supportée' });
         }
       } catch (error) {
-        res.status(500).json({ error: 'Erreur lors de l\'opération' });
+        console.error('Erreur générale dans l\'API PATCH:', error);
+        res.status(500).json({ error: `Erreur lors de l'opération: ${error.message}` });
       }
       break;
       
