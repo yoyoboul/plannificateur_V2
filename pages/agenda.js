@@ -249,13 +249,15 @@ export default function AgendaPage() {
   const handleUnscheduleTask = async (zone, titre) => {
     console.log("Déplanification de la tâche:", zone, titre);
     try {
-      // Utiliser uniquement l'API
-      const response = await fetch(`/api/tasks/${encodeURIComponent(zone)}/${encodeURIComponent(titre)}`, {
-        method: 'PATCH',
+      // Utiliser le nouvel endpoint API
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: zone,
+          titre: titre,
           action: 'unschedule',
         }),
       });
@@ -322,12 +324,14 @@ export default function AgendaPage() {
   // Mettre à jour le statut d'une tâche
   const handleStatusChange = async (zone, titre, newStatus) => {
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: zone,
+          titre: titre,
           action: 'updateStatus',
           status: newStatus,
         }),
@@ -352,6 +356,8 @@ export default function AgendaPage() {
             return task;
           })
         );
+      } else {
+        console.error('Erreur lors de la mise à jour du statut:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);

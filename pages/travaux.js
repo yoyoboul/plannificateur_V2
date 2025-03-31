@@ -148,12 +148,15 @@ export default function TravauxPage() {
 
   const handleStatusChange = async (zone, titre, newStatus) => {
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
-        method: 'PATCH',
+      // Utiliser le nouvel endpoint qui gère mieux les zones avec slashes
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: zone,
+          titre: titre,
           action: 'updateStatus',
           status: newStatus,
         }),
@@ -178,6 +181,8 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(updatedTasks.filter(task => task.statut === selectedStatus));
         }
+      } else {
+        console.error('Erreur lors de la mise à jour du statut:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);
@@ -186,12 +191,17 @@ export default function TravauxPage() {
 
   const handleEdit = async (zone, titre, updatedTask) => {
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedTask),
+        body: JSON.stringify({
+          zone: zone,
+          titre: titre,
+          action: 'update',
+          ...updatedTask
+        }),
       });
 
       if (response.ok) {
@@ -213,6 +223,8 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(updatedTasks.filter(task => task.statut === selectedStatus));
         }
+      } else {
+        console.error('Erreur lors de la mise à jour de la tâche:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la tâche:', error);
@@ -221,8 +233,16 @@ export default function TravauxPage() {
 
   const handleDelete = async (zone, titre) => {
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          zone: zone,
+          titre: titre,
+          action: 'delete'
+        }),
       });
 
       if (response.ok) {
@@ -239,6 +259,8 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(updatedTasks.filter(task => task.statut === selectedStatus));
         }
+      } else {
+        console.error('Erreur lors de la suppression de la tâche:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la suppression de la tâche:', error);
@@ -261,12 +283,14 @@ export default function TravauxPage() {
     if (!taskToSchedule) return;
 
     try {
-      const response = await fetch(`/api/tasks/${taskToSchedule.zone}/${taskToSchedule.titre}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: taskToSchedule.zone,
+          titre: taskToSchedule.titre,
           action: 'schedule',
           startDate: startDate.toISOString(),
           duration: parseFloat(duration),
@@ -289,6 +313,8 @@ export default function TravauxPage() {
         }
         
         handleScheduleDialogClose();
+      } else {
+        console.error('Erreur lors de la planification de la tâche:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la planification de la tâche:', error);
@@ -297,12 +323,14 @@ export default function TravauxPage() {
 
   const handleUnscheduleTask = async (zone, titre) => {
     try {
-      const response = await fetch(`/api/tasks/${zone}/${titre}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: zone,
+          titre: titre,
           action: 'unschedule',
         }),
       });
@@ -321,6 +349,8 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(tasksData.filter(task => task.statut === selectedStatus));
         }
+      } else {
+        console.error('Erreur lors de la déplanification de la tâche:', await response.text());
       }
     } catch (error) {
       console.error('Erreur lors de la déplanification de la tâche:', error);
