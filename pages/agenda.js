@@ -198,12 +198,14 @@ export default function AgendaPage() {
     if (!selectedTask || !selectedDay) return;
     
     try {
-      const response = await fetch(`/api/tasks/${selectedTask.zone}/${selectedTask.titre}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/tasks-update`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          zone: selectedTask.zone,
+          titre: selectedTask.titre,
           action: 'schedule',
           startDate: selectedDay.toISOString(),
           duration: parseFloat(duration),
