@@ -27,11 +27,11 @@ import Layout from '../components/Layout';
 import dayjs from 'dayjs';
 
 export default function CoursesPage() {
-  /* --------- Responsive --------- */
+  /* ------------------ Responsive ------------------ */
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  /* --------- State --------- */
+  /* ------------------ State ------------------ */
   const emptyItem = {
     magasin: '',
     produit: '',
@@ -43,7 +43,7 @@ export default function CoursesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState(emptyItem);
 
-  /* --------- Data --------- */
+  /* ------------------ Data ------------------ */
   const fetchItems = async () => {
     try {
       const res = await fetch('/api/shopping');
@@ -75,7 +75,7 @@ export default function CoursesPage() {
     fetchItems();
   };
 
-  /* --------- Render helpers --------- */
+  /* ------------------ Render helpers ------------------ */
   const renderMobileList = () => (
     <List>
       {items.map(item => (
@@ -174,10 +174,10 @@ export default function CoursesPage() {
     </TableContainer>
   );
 
-  /* --------- JSX --------- */
+  /* ------------------ JSX ------------------ */
   return (
     <Layout>
-      {/* En-tête */}
+      {/* ---------- En-tête + bouton ---------- */}
       <Box
         mb={4}
         display="flex"
@@ -202,10 +202,10 @@ export default function CoursesPage() {
         </Button>
       </Box>
 
-      {/* Liste ou tableau */}
+      {/* ---------- Liste ou tableau ---------- */}
       {isMobile ? renderMobileList() : renderTable()}
 
-      {/* Boîte de dialogue */}
+      {/* ---------- Dialogue « Nouvel article » ---------- */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
