@@ -54,7 +54,9 @@ export default function CoursesPage() {
     }
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   const handleAdd = async () => {
     if (!newItem.produit) return;
@@ -77,8 +79,17 @@ export default function CoursesPage() {
   const renderMobileList = () => (
     <List>
       {items.map(item => (
-        <ListItem key={item._id} divider sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-          <Box display="flex" width="100%" justifyContent="space-between" alignItems="center">
+        <ListItem
+          key={item._id}
+          divider
+          sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
+        >
+          <Box
+            display="flex"
+            width="100%"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography variant="body2">
               {dayjs(item.date).format('DD/MM/YYYY')}
             </Typography>
@@ -166,7 +177,7 @@ export default function CoursesPage() {
   /* --------- JSX --------- */
   return (
     <Layout>
-      {/* En-tête + bouton */}
+      {/* En-tête */}
       <Box
         mb={4}
         display="flex"
@@ -191,10 +202,10 @@ export default function CoursesPage() {
         </Button>
       </Box>
 
-      {/* Liste ou tableau selon la taille d’écran */}
+      {/* Liste ou tableau */}
       {isMobile ? renderMobileList() : renderTable()}
 
-      {/* Boîte de dialogue « Nouvel article » */}
+      {/* Boîte de dialogue */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
