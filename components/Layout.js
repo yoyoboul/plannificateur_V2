@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useState } from "react";
+import { useRouter } from "next/router";
 import {
   Box,
   Drawer,
@@ -16,7 +16,8 @@ import {
   CssBaseline,
   useMediaQuery,
   useTheme,
-} from '@mui/material';
+  ListSubheader,
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -26,14 +27,15 @@ import {
   Settings as SettingsIcon,
   Home as HomeIcon,
   ShoppingCart as ShoppingCartIcon,
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
+} from "@mui/icons-material";
+import { motion } from "framer-motion";
 
 const drawerWidth = 260;
+const mobileDrawerWidth = 220;
 
 export default function Layout({ children }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
 
@@ -41,81 +43,108 @@ export default function Layout({ children }) {
     setMobileOpen(!mobileOpen);
   };
 
-  const menuItems = [
-    { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/' },
-    { text: 'Liste des travaux', icon: <ListIcon />, path: '/travaux' },
-    { text: 'Agenda', icon: <CalendarIcon />, path: '/agenda' },
-    { text: 'Rapport', icon: <ChartIcon />, path: '/rapport' },
-    { text: 'Liste de courses', icon: <ShoppingCartIcon />, path: '/courses' },
-    { text: 'Gérer les tâches', icon: <SettingsIcon />, path: '/gestion' },
+  const menuSections = [
+    {
+      subheader: "Navigation",
+      items: [
+        { text: "Tableau de bord", icon: <DashboardIcon />, path: "/" },
+        { text: "Liste des travaux", icon: <ListIcon />, path: "/travaux" },
+        { text: "Agenda", icon: <CalendarIcon />, path: "/agenda" },
+        { text: "Rapport", icon: <ChartIcon />, path: "/rapport" },
+      ],
+    },
+    {
+      subheader: "Outils",
+      items: [
+        {
+          text: "Liste de courses",
+          icon: <ShoppingCartIcon />,
+          path: "/courses",
+        },
+        { text: "Gérer les tâches", icon: <SettingsIcon />, path: "/gestion" },
+      ],
+    },
   ];
+
+  const allMenuItems = menuSections.flatMap((section) => section.items);
 
   const drawer = (
     <div>
-      <Toolbar sx={{ justifyContent: 'center', py: 1.5 }}>
+      <Toolbar sx={{ justifyContent: "center", py: 1.5 }}>
         <Box display="flex" alignItems="center">
-          <HomeIcon sx={{ mr: 1, color: 'primary.main', fontSize: '2rem' }} />
-          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+          <HomeIcon sx={{ mr: 1, color: "primary.main", fontSize: "2rem" }} />
+          <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
             Planificateur
           </Typography>
         </Box>
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={router.pathname === item.path}
-              onClick={() => {
-                router.push(item.path);
-                if (isMobile) {
-                  setMobileOpen(false);
-                }
-              }}
-              sx={{
-                borderRadius: '0 20px 20px 0',
-                mx: 1,
-                my: 0.5,
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: 'white',
-                  },
-                },
-              }}
+        {menuSections.map((section) => (
+          <Box key={section.subheader}>
+            <ListSubheader
+              sx={{ bgcolor: "transparent", color: "text.secondary" }}
             >
-              <ListItemIcon
-                sx={{
-                  minWidth: 45,
-                  color: router.pathname === item.path ? 'white' : 'inherit',
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+              {section.subheader}
+            </ListSubheader>
+            {section.items.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  selected={router.pathname === item.path}
+                  onClick={() => {
+                    router.push(item.path);
+                    if (isMobile) {
+                      setMobileOpen(false);
+                    }
+                  }}
+                  sx={{
+                    borderRadius: "0 20px 20px 0",
+                    mx: 1,
+                    my: 0.5,
+                    "&.Mui-selected": {
+                      backgroundColor: "primary.main",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "primary.dark",
+                      },
+                      "& .MuiListItemIcon-root": {
+                        color: "white",
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 45,
+                      color:
+                        router.pathname === item.path ? "white" : "inherit",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+            <Divider sx={{ my: 1 }} />
+          </Box>
         ))}
       </List>
     </div>
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: { xs: "100%", sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          boxShadow: 'none',
-          backgroundColor: 'white',
-          color: 'text.primary',
-          borderBottom: '1px solid #e0e0e0',
+          boxShadow: "none",
+          backgroundColor: "white",
+          color: "text.primary",
+          borderBottom: "1px solid #e0e0e0",
         }}
       >
         <Toolbar>
@@ -124,18 +153,22 @@ export default function Layout({ children }) {
             aria-label="ouvrir le menu"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            {menuItems.find((item) => item.path === router.pathname)?.text || 'Planificateur de Travaux'}
+            {allMenuItems.find((item) => item.path === router.pathname)?.text ||
+              "Planificateur de Travaux"}
           </Typography>
         </Toolbar>
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{
+          width: { xs: mobileDrawerWidth, sm: drawerWidth },
+          flexShrink: { sm: 0 },
+        }}
         aria-label="menu de navigation"
       >
         <Drawer
@@ -146,8 +179,11 @@ export default function Layout({ children }) {
             keepMounted: true, // Meilleure performance sur mobile
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: mobileDrawerWidth,
+            },
           }}
         >
           {drawer}
@@ -155,8 +191,11 @@ export default function Layout({ children }) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -168,9 +207,9 @@ export default function Layout({ children }) {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          backgroundColor: 'background.default',
-          minHeight: '100vh',
+          width: { xs: "100%", sm: `calc(100% - ${drawerWidth}px)` },
+          backgroundColor: "background.default",
+          minHeight: "100vh",
         }}
       >
         <Toolbar />
@@ -185,4 +224,4 @@ export default function Layout({ children }) {
       </Box>
     </Box>
   );
-} 
+}
