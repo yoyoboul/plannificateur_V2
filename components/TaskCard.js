@@ -19,6 +19,7 @@ import {
   InputLabel,
   Select,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   MoreVert as MoreIcon,
@@ -73,6 +74,7 @@ const getPriorityColor = (priority) => {
 
 export default function TaskCard({ task, onStatusChange, onEdit, onDelete, onSchedule, onUnschedule }) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [anchorEl, setAnchorEl] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
@@ -150,7 +152,13 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, onSch
         }}
       >
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            flexDirection={isMobile ? 'column' : 'row'}
+            gap={isMobile ? 1 : 0}
+          >
             <Typography variant="h6" component="div" gutterBottom>
               {task.titre}
             </Typography>
@@ -224,7 +232,13 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, onSch
             />
           </Box>
 
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems={isMobile ? 'flex-start' : 'center'}
+            flexDirection={isMobile ? 'column' : 'row'}
+            gap={isMobile ? 1 : 0}
+          >
             <Typography variant="body2" color="text.secondary">
               Durée: {formatDuration(task.durée_estimée)}
             </Typography>

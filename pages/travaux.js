@@ -19,6 +19,8 @@ import {
   IconButton,
   Collapse,
   Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -52,6 +54,8 @@ export default function TravauxPage() {
   const [startDate, setStartDate] = useState(dayjs());
   const [duration, setDuration] = useState(1);
   const [expandedGroups, setExpandedGroups] = useState({});
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   /* ------------------- Chargement initial ------------------- */
   useEffect(() => {
@@ -191,7 +195,7 @@ export default function TravauxPage() {
 
       {/* ----------- Liste des tâches ----------- */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .5 }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           {filteredTasks.length ? (
             <>
               {/* Groupes */}
@@ -211,7 +215,7 @@ export default function TravauxPage() {
                       <Typography variant='subtitle1' sx={{ fontWeight:'bold', ml:1 }}>{group.titre}</Typography>
                     </Paper>
                     <Collapse in={!!expandedGroups[key]} unmountOnExit timeout='auto'>
-                      <Grid container spacing={2} pl={2}>
+                      <Grid container spacing={isMobile ? 1 : 2} pl={2}>
                         {sub.map(task => (
                           <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
                             <TaskCard
