@@ -22,7 +22,6 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  FilterList as FilterIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
@@ -33,6 +32,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
 export default function TravauxPage() {
+  /* ------------------- States ------------------- */
   const [tasks, setTasks] = useState([]);
   const [zones, setZones] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
@@ -53,7 +53,7 @@ export default function TravauxPage() {
   const [duration, setDuration] = useState(1);
   const [expandedGroups, setExpandedGroups] = useState({});
 
-  /* ------------------- Chargement initial ------------------- */
+  /* ------------------- Initial fetch ------------------- */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -78,7 +78,7 @@ export default function TravauxPage() {
     fetchData();
   }, []);
 
-  /* ------------------- Aides & filtres ------------------- */
+  /* ------------------- Helpers ------------------- */
   const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
 
   const applyFilter = (list, statusIndex) => {
@@ -123,12 +123,12 @@ export default function TravauxPage() {
     setNewTask({ titre: '', statut: 'À faire', priorité: 'Moyenne', durée_estimée: 1, parent: '' });
   };
 
-  const handleStatusChange   = (z, t, s)          => postUpdate({ zone: z, titre: t, action: 'updateStatus', status: s });
-  const handleEdit           = (z, t, u)          => postUpdate({ zone: z, titre: t, action: 'update',        ...u });
-  const handleDelete         = (z, t)             => postUpdate({ zone: z, titre: t, action: 'delete' });
-  const handleUnscheduleTask = (z, t)             => postUpdate({ zone: z, titre: t, action: 'unschedule' });
+  const handleStatusChange   = (z, t, s) => postUpdate({ zone: z, titre: t, action: 'updateStatus', status: s });
+  const handleEdit           = (z, t, u) => postUpdate({ zone: z, titre: t, action: 'update',        ...u });
+  const handleDelete         = (z, t)    => postUpdate({ zone: z, titre: t, action: 'delete' });
+  const handleUnscheduleTask = (z, t)    => postUpdate({ zone: z, titre: t, action: 'unschedule' });
 
-  const handleScheduleTask   = async () => {
+  const handleScheduleTask = async () => {
     if (!taskToSchedule) return;
     await postUpdate({
       zone: taskToSchedule.zone,
@@ -155,16 +155,18 @@ export default function TravauxPage() {
     await refreshTasks();
   };
 
-  /* ------------------- Rendu ------------------- */
+  /* ------------------- Render ------------------- */
   return (
-    <Layout>
-      {/* ----------- En-tête ----------- */}
+    <Layout sx={{ overflowX: 'hidden' }}>
+      {/* ----------- Header ----------- */}
       <Box mb={4}>
         <Typography variant='h4' gutterBottom>Liste des travaux</Typography>
-        <Typography variant='subtitle1' color='text.secondary'>Consultez et gérez toutes vos tâches de rénovation</Typography>
+        <Typography variant='subtitle1' color='text.secondary'>
+          Consultez et gérez toutes vos tâches de rénovation
+        </Typography>
       </Box>
 
-      {/* ----------- Filtres + bouton d’ajout ----------- */}
+      {/* ----------- Filters + Add button ----------- */}
       <Box
         mb={3}
         display='flex'
@@ -178,37 +180,61 @@ export default function TravauxPage() {
           onChange={handleTabChange}
           variant='scrollable'
           scrollButtons='auto'
-          sx={{ backgroundColor: 'background.paper', borderRadius: 1, boxShadow: 1, minHeight: 48 }}
+          sx={{
+            backgroundColor: 'background.paper',
+            borderRadius: 1,
+            boxShadow: 1,
+            minHeight: 48,
+          }}
         >
           <Tab label='Tous' />
           {statuses.map(s => <Tab key={s} label={s} />)}
         </Tabs>
 
-        <Button variant='contained' startIcon={<AddIcon />} sx={{ minWidth: 200 }} onClick={() => setAddDialogOpen(true)}>
+        <Button
+          variant='contained'
+          startIcon={<AddIcon />}
+          sx={{ minWidth: 200 }}
+          onClick={() => setAddDialogOpen(true)}
+        >
           Ajouter une tâche
         </Button>
       </Box>
 
-      {/* ----------- Liste des tâches ----------- */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .5 }}>
+      {/* ----------- Task list ----------- */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <Grid container spacing={2}>
           {filteredTasks.length ? (
             <>
-              {/* Groupes */}
+              {/*--------- Groups ---------*/}
               {tasks.filter(t => t.isGroup).map(group => {
-                const sub = filteredTasks.filter(t => t.parent === group.titre && t.zone === group.zone);
+                const sub = filteredTasks.filter(
+                  t => t.parent === group.titre && t.zone === group.zone
+                );
                 if (!sub.length) return null;
                 const key = `${group.zone}-${group.titre}`;
                 return (
                   <Grid item xs={12} key={`group-${key}`}>
                     <Paper
-                      sx={{ p:2, mb:1, display:'flex', alignItems:'center', backgroundColor:'grey.100' }}
+                      sx={{
+                        p: 2,
+                        mb: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: 'grey.100',
+                      }}
                       onClick={() => handleToggleGroup(key)}
                     >
                       <IconButton size='small'>
-                        {expandedGroups[key] ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+                        {expandedGroups[key] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                       </IconButton>
-                      <Typography variant='subtitle1' sx={{ fontWeight:'bold', ml:1 }}>{group.titre}</Typography>
+                      <Typography variant='subtitle1' sx={{ fontWeight: 'bold', ml: 1 }}>
+                        {group.titre}
+                      </Typography>
                     </Paper>
                     <Collapse in={!!expandedGroups[key]} unmountOnExit timeout='auto'>
                       <Grid container spacing={2} pl={2}>
@@ -219,7 +245,12 @@ export default function TravauxPage() {
                               onStatusChange={handleStatusChange}
                               onEdit={handleEdit}
                               onDelete={handleDelete}
-                              onSchedule={() => { setTaskToSchedule(task); setDuration(task.durée_estimée || 1); setStartDate(dayjs()); setScheduleDialogOpen(true); }}
+                              onSchedule={() => {
+                                setTaskToSchedule(task);
+                                setDuration(task.durée_estimée || 1);
+                                setStartDate(dayjs());
+                                setScheduleDialogOpen(true);
+                              }}
                               onUnschedule={handleUnscheduleTask}
                             />
                           </Grid>
@@ -230,32 +261,51 @@ export default function TravauxPage() {
                 );
               })}
 
-              {/* Tâches non groupées (avec ré-ordonnancement) */}
-              <Reorder.Group
-                axis='y'
-                values={filteredTasks.filter(t => !t.parent)}
-                onReorder={handleReorder}
-                style={{ width: '100%' }}
-              >
-                {filteredTasks.filter(t => !t.parent).map(task => (
-                  <Reorder.Item key={`${task.zone}-${task.titre}`} value={task} style={{ listStyle:'none' }}>
-                    <Grid item xs={12}>
-                      <TaskCard
-                        task={task}
-                        onStatusChange={handleStatusChange}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onSchedule={() => { setTaskToSchedule(task); setDuration(task.durée_estimée || 1); setStartDate(dayjs()); setScheduleDialogOpen(true); }}
-                        onUnschedule={handleUnscheduleTask}
-                      />
-                    </Grid>
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
+              {/*--------- Ungrouped tasks (sortable) ---------*/}
+              <Grid item xs={12}>
+                <Reorder.Group
+                  axis='y'
+                  values={filteredTasks.filter(t => !t.parent)}
+                  onReorder={handleReorder}
+                  style={{
+                    width: '100%',
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  {filteredTasks
+                    .filter(t => !t.parent)
+                    .map(task => (
+                      <Reorder.Item
+                        key={`${task.zone}-${task.titre}`}
+                        value={task}
+                        style={{
+                          listStyle: 'none',
+                          width: '100%',
+                        }}
+                      >
+                        <TaskCard
+                          task={task}
+                          onStatusChange={handleStatusChange}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onSchedule={() => {
+                            setTaskToSchedule(task);
+                            setDuration(task.durée_estimée || 1);
+                            setStartDate(dayjs());
+                            setScheduleDialogOpen(true);
+                          }}
+                          onUnschedule={handleUnscheduleTask}
+                        />
+                      </Reorder.Item>
+                    ))}
+                </Reorder.Group>
+              </Grid>
             </>
           ) : (
             <Grid item xs={12}>
-              <Paper sx={{ p:3, textAlign:'center' }}>
+              <Paper sx={{ p: 3, textAlign: 'center' }}>
                 <Typography>Aucune tâche trouvée avec les filtres actuels.</Typography>
               </Paper>
             </Grid>
@@ -263,36 +313,59 @@ export default function TravauxPage() {
         </Grid>
       </motion.div>
 
-      {/* ----------- Dialogue d’ajout ----------- */}
+      {/* ----------- Add dialog ----------- */}
       <Dialog open={addDialogOpen} onClose={handleAddDialogClose} fullWidth maxWidth='sm'>
         <DialogTitle>Ajouter une nouvelle tâche</DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus fullWidth margin='dense' label='Titre'
+            autoFocus
+            fullWidth
+            margin='dense'
+            label='Titre'
             value={newTask.titre}
             onChange={e => setNewTask({ ...newTask, titre: e.target.value })}
           />
           <FormControl fullWidth margin='dense'>
             <InputLabel>Zone</InputLabel>
-            <Select value={selectedZone} label='Zone' onChange={e => setSelectedZone(e.target.value)}>
-              {zones.map(z => <MenuItem key={z} value={z}>{z}</MenuItem>)}
+            <Select
+              value={selectedZone}
+              label='Zone'
+              onChange={e => setSelectedZone(e.target.value)}
+            >
+              {zones.map(z => (
+                <MenuItem key={z} value={z}>{z}</MenuItem>
+              ))}
             </Select>
           </FormControl>
           <TextField
-            fullWidth margin='dense' label='Groupe (optionnel)'
+            fullWidth
+            margin='dense'
+            label='Groupe (optionnel)'
             value={newTask.parent}
             onChange={e => setNewTask({ ...newTask, parent: e.target.value })}
           />
           <FormControl fullWidth margin='dense'>
             <InputLabel>Priorité</InputLabel>
-            <Select value={newTask.priorité} label='Priorité' onChange={e => setNewTask({ ...newTask, priorité: e.target.value })}>
-              {['Élevée','Moyenne','Basse','Faible'].map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            <Select
+              value={newTask.priorité}
+              label='Priorité'
+              onChange={e => setNewTask({ ...newTask, priorité: e.target.value })}
+            >
+              {['Élevée', 'Moyenne', 'Basse', 'Faible'].map(p => (
+                <MenuItem key={p} value={p}>{p}</MenuItem>
+              ))}
             </Select>
           </FormControl>
           <TextField
-            fullWidth margin='dense' label='Durée estimée (jours)' type='number' inputProps={{ min:0.1, step:0.1 }}
+            fullWidth
+            margin='dense'
+            label='Durée estimée (jours)'
+            type='number'
+            inputProps={{ min: 0.1, step: 0.1 }}
             value={newTask.durée_estimée}
-            onChange={e => setNewTask({ ...newTask, durée_estimée: parseFloat(e.target.value) })}
+            onChange={e =>
+              setNewTask({ ...newTask, durée_estimée: parseFloat(e.target.value) })
+            }
           />
         </DialogContent>
         <DialogActions>
@@ -301,20 +374,33 @@ export default function TravauxPage() {
         </DialogActions>
       </Dialog>
 
-      {/* ----------- Dialogue de planification ----------- */}
-      <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} fullWidth maxWidth='sm'>
+      {/* ----------- Schedule dialog ----------- */}
+      <Dialog
+        open={scheduleDialogOpen}
+        onClose={() => setScheduleDialogOpen(false)}
+        fullWidth
+        maxWidth='sm'
+      >
         <DialogTitle>Planifier la tâche</DialogTitle>
         <DialogContent>
           {taskToSchedule && (
             <Box mt={2}>
-              <Typography variant='subtitle1' gutterBottom>{taskToSchedule.titre}</Typography>
-              <Divider sx={{ mb:3 }} />
+              <Typography variant='subtitle1' gutterBottom>
+                {taskToSchedule.titre}
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
               <DatePicker
-                label='Date de début' value={startDate}
-                onChange={v => setStartDate(v)} sx={{ width:'100%', mb:3 }}
+                label='Date de début'
+                value={startDate}
+                onChange={v => setStartDate(v)}
+                sx={{ width: '100%', mb: 3 }}
               />
               <TextField
-                fullWidth margin='dense' label='Durée (jours)' type='number' inputProps={{ min:0.1, step:0.1 }}
+                fullWidth
+                margin='dense'
+                label='Durée (jours)'
+                type='number'
+                inputProps={{ min: 0.1, step: 0.1 }}
                 value={duration}
                 onChange={e => setDuration(e.target.value)}
               />
