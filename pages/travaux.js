@@ -40,6 +40,7 @@ export default function TravauxPage() {
     statut: 'À faire',
     priorité: 'Moyenne',
     durée_estimée: 1,
+    parent: '',
   });
   const [selectedZone, setSelectedZone] = useState('');
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
@@ -62,7 +63,7 @@ export default function TravauxPage() {
         ]);
 
         setTasks(tasksData);
-        setFilteredTasks(tasksData);
+        setFilteredTasks(tasksData.filter(t => !t.isGroup));
         setZones(zonesData);
         
         if (zonesData.length > 0) {
@@ -83,7 +84,7 @@ export default function TravauxPage() {
     
     if (newValue === 0) {
       // Tous les travaux
-      setFilteredTasks(tasks);
+      setFilteredTasks(tasks.filter(t => !t.isGroup));
     } else {
       // Filtrer par statut
       const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
@@ -104,6 +105,7 @@ export default function TravauxPage() {
       statut: 'À faire',
       priorité: 'Moyenne',
       durée_estimée: 1,
+      parent: '',
     });
   };
 
@@ -129,10 +131,10 @@ export default function TravauxPage() {
         const tasksRes = await fetch('/api/tasks');
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
-        
+
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -175,7 +177,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -217,7 +219,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -253,7 +255,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -305,7 +307,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -343,7 +345,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -418,23 +420,58 @@ export default function TravauxPage() {
       >
         <Grid container spacing={2}>
           {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
-                <TaskCard
-                  task={task}
-                  onStatusChange={handleStatusChange}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onSchedule={(zone, titre, startDate, duration) => {
-                    setTaskToSchedule(task);
-                    setStartDate(dayjs(startDate));
-                    setDuration(duration);
-                    handleScheduleTask();
-                  }}
-                  onUnschedule={handleUnscheduleTask}
-                />
-              </Grid>
-            ))
+            <>
+              {tasks
+                .filter(t => t.isGroup)
+                .map(group => {
+                  const sub = filteredTasks.filter(t => t.parent === group.titre && t.zone === group.zone);
+                  if (sub.length === 0) return null;
+                  return (
+                    <Grid item xs={12} key={`group-${group.zone}-${group.titre}`}>
+                      <Paper sx={{ p: 2, backgroundColor: 'grey.100', mb: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{group.titre}</Typography>
+                      </Paper>
+                      <Grid container spacing={2} sx={{ pl: 2 }}>
+                        {sub.map(task => (
+                          <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
+                            <TaskCard
+                              task={task}
+                              onStatusChange={handleStatusChange}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                              onSchedule={(zone, titre, startDate, duration) => {
+                                setTaskToSchedule(task);
+                                setStartDate(dayjs(startDate));
+                                setDuration(duration);
+                                handleScheduleTask();
+                              }}
+                              onUnschedule={handleUnscheduleTask}
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Grid>
+                  );
+                })}
+
+              {filteredTasks.filter(t => !t.parent).map(task => (
+                <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
+                  <TaskCard
+                    task={task}
+                    onStatusChange={handleStatusChange}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onSchedule={(zone, titre, startDate, duration) => {
+                      setTaskToSchedule(task);
+                      setStartDate(dayjs(startDate));
+                      setDuration(duration);
+                      handleScheduleTask();
+                    }}
+                    onUnschedule={handleUnscheduleTask}
+                  />
+                </Grid>
+              ))}
+            </>
           ) : (
             <Grid item xs={12}>
               <Paper sx={{ p: 3, textAlign: 'center' }}>
@@ -476,6 +513,16 @@ export default function TravauxPage() {
               ))}
             </Select>
           </FormControl>
+
+          <TextField
+            margin="dense"
+            label="Groupe (optionnel)"
+            fullWidth
+            variant="outlined"
+            value={newTask.parent}
+            onChange={(e) => setNewTask({ ...newTask, parent: e.target.value })}
+            sx={{ mb: 2 }}
+          />
           
           <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>Priorité</InputLabel>
