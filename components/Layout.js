@@ -25,6 +25,7 @@ import {
   BarChart as ChartIcon,
   Settings as SettingsIcon,
   Home as HomeIcon,
+  ShoppingCart as ShoppingCartIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -45,6 +46,7 @@ export default function Layout({ children }) {
     { text: 'Liste des travaux', icon: <ListIcon />, path: '/travaux' },
     { text: 'Agenda', icon: <CalendarIcon />, path: '/agenda' },
     { text: 'Rapport', icon: <ChartIcon />, path: '/rapport' },
+    { text: 'Liste de courses', icon: <ShoppingCartIcon />, path: '/courses' },
     { text: 'Gérer les tâches', icon: <SettingsIcon />, path: '/gestion' },
   ];
 
