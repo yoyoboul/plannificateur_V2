@@ -24,9 +24,8 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  FilterList as FilterIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
@@ -56,7 +55,7 @@ export default function TravauxPage() {
   const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
-    // Charger les tâches et les zones
+    // Load tasks and zones
     const fetchData = async () => {
       try {
         const [tasksRes, zonesRes] = await Promise.all([
@@ -72,7 +71,7 @@ export default function TravauxPage() {
         setTasks(tasksData);
         setFilteredTasks(tasksData.filter(t => !t.isGroup));
         setZones(zonesData);
-        
+
         if (zonesData.length > 0) {
           setSelectedZone(zonesData[0]);
         }
@@ -88,12 +87,12 @@ export default function TravauxPage() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    
+
     if (newValue === 0) {
-      // Tous les travaux
+      // All tasks
       setFilteredTasks(tasks.filter(t => !t.isGroup));
     } else {
-      // Filtrer par statut
+      // Filter by status
       const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
       const selectedStatus = statuses[newValue - 1];
       setFilteredTasks(tasks.filter(task => task.statut === selectedStatus));
@@ -106,7 +105,7 @@ export default function TravauxPage() {
 
   const handleAddDialogClose = () => {
     setAddDialogOpen(false);
-    // Réinitialiser le formulaire
+    // Reset form
     setNewTask({
       titre: '',
       statut: 'À faire',
@@ -134,12 +133,12 @@ export default function TravauxPage() {
       });
 
       if (response.ok) {
-        // Recharger les tâches
+        // Reload tasks
         const tasksRes = await fetch('/api/tasks');
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
 
-        // Appliquer le filtre actuel
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
@@ -147,42 +146,40 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(tasksData.filter(task => task.statut === selectedStatus));
         }
-        
+
         handleAddDialogClose();
       }
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de la tâche:', error);
+      console.error("Erreur lors de l'ajout de la tâche:", error);
     }
   };
 
   const handleStatusChange = async (zone, titre, newStatus) => {
     try {
-      // Utiliser le nouvel endpoint qui gère mieux les zones avec slashes
-      const response = await fetch(`/api/tasks-update`, {
+      const response = await fetch('/api/tasks-update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          zone: zone,
-          titre: titre,
+          zone,
+          titre,
           action: 'updateStatus',
           status: newStatus,
         }),
       });
 
       if (response.ok) {
-        // Mettre à jour localement
         const updatedTasks = tasks.map(task => {
           if (task.zone === zone && task.titre === titre) {
             return { ...task, statut: newStatus };
           }
           return task;
         });
-        
+
         setTasks(updatedTasks);
-        
-        // Appliquer le filtre actuel
+
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
@@ -200,31 +197,30 @@ export default function TravauxPage() {
 
   const handleEdit = async (zone, titre, updatedTask) => {
     try {
-      const response = await fetch(`/api/tasks-update`, {
+      const response = await fetch('/api/tasks-update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          zone: zone,
-          titre: titre,
+          zone,
+          titre,
           action: 'update',
-          ...updatedTask
+          ...updatedTask,
         }),
       });
 
       if (response.ok) {
-        // Mettre à jour localement
         const updatedTasks = tasks.map(task => {
           if (task.zone === zone && task.titre === titre) {
             return { ...task, ...updatedTask };
           }
           return task;
         });
-        
+
         setTasks(updatedTasks);
-        
-        // Appliquer le filtre actuel
+
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
@@ -242,25 +238,23 @@ export default function TravauxPage() {
 
   const handleDelete = async (zone, titre) => {
     try {
-      const response = await fetch(`/api/tasks-update`, {
+      const response = await fetch('/api/tasks-update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          zone: zone,
-          titre: titre,
-          action: 'delete'
+          zone,
+          titre,
+          action: 'delete',
         }),
       });
 
       if (response.ok) {
-        // Mettre à jour localement
         const updatedTasks = tasks.filter(task => !(task.zone === zone && task.titre === titre));
-        
         setTasks(updatedTasks);
-        
-        // Appliquer le filtre actuel
+
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
@@ -276,7 +270,7 @@ export default function TravauxPage() {
     }
   };
 
-  const handleScheduleDialogOpen = (task) => {
+  const handleScheduleDialogOpen = task => {
     setTaskToSchedule(task);
     setStartDate(dayjs());
     setDuration(task.durée_estimée || 1);
@@ -292,7 +286,7 @@ export default function TravauxPage() {
     if (!taskToSchedule) return;
 
     try {
-      const response = await fetch(`/api/tasks-update`, {
+      const response = await fetch('/api/tasks-update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -307,12 +301,11 @@ export default function TravauxPage() {
       });
 
       if (response.ok) {
-        // Recharger les tâches
         const tasksRes = await fetch('/api/tasks');
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
-        
-        // Appliquer le filtre actuel
+
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
@@ -320,7 +313,7 @@ export default function TravauxPage() {
           const selectedStatus = statuses[tabValue - 1];
           setFilteredTasks(tasksData.filter(task => task.statut === selectedStatus));
         }
-        
+
         handleScheduleDialogClose();
       } else {
         console.error('Erreur lors de la planification de la tâche:', await response.text());
@@ -332,25 +325,24 @@ export default function TravauxPage() {
 
   const handleUnscheduleTask = async (zone, titre) => {
     try {
-      const response = await fetch(`/api/tasks-update`, {
+      const response = await fetch('/api/tasks-update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          zone: zone,
-          titre: titre,
+          zone,
+          titre,
           action: 'unschedule',
         }),
       });
 
       if (response.ok) {
-        // Recharger les tâches
         const tasksRes = await fetch('/api/tasks');
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
-        
-        // Appliquer le filtre actuel
+
+        // Apply current filter
         if (tabValue === 0) {
           setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
@@ -366,10 +358,10 @@ export default function TravauxPage() {
     }
   };
 
-  const handleToggleGroup = (key) => {
+  const handleToggleGroup = key => {
     setExpandedGroups(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
@@ -384,28 +376,28 @@ export default function TravauxPage() {
         </Typography>
       </Box>
 
-      {/* Filtres et bouton d'ajout */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+      {/* Filters and add button */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 3,
           flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2
+          gap: 2,
         }}
       >
-        <Tabs 
-          value={tabValue} 
+        <Tabs
+          value={tabValue}
           onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ 
-            backgroundColor: 'background.paper', 
+          sx={{
+            backgroundColor: 'background.paper',
             borderRadius: 1,
             boxShadow: 1,
             minHeight: 48,
-            width: { xs: '100%', sm: 'auto' }
+            width: { xs: '100%', sm: 'auto' },
           }}
         >
           <Tab label="Tous" />
@@ -414,7 +406,7 @@ export default function TravauxPage() {
           <Tab label="En attente" />
           <Tab label="Terminés" />
         </Tabs>
-        
+
         <Button
           variant="contained"
           color="primary"
@@ -426,12 +418,8 @@ export default function TravauxPage() {
         </Button>
       </Box>
 
-      {/* Liste des tâches */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      {/* Task list */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <Grid container spacing={2}>
           {filteredTasks.length > 0 ? (
             <>
@@ -439,14 +427,20 @@ export default function TravauxPage() {
                 .filter(t => t.isGroup)
                 .map(group => {
                   const sub = filteredTasks.filter(
-                    t => t.parent === group.titre && t.zone === group.zone
+                    t => t.parent === group.titre && t.zone === group.zone,
                   );
                   if (sub.length === 0) return null;
                   const groupKey = `${group.zone}-${group.titre}`;
                   return (
                     <Grid item xs={12} key={`group-${groupKey}`}>
                       <Paper
-                        sx={{ p: 2, backgroundColor: 'grey.100', mb: 1, display: 'flex', alignItems: 'center' }}
+                        sx={{
+                          p: 2,
+                          backgroundColor: 'grey.100',
+                          mb: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
                       >
                         <IconButton size="small" onClick={() => handleToggleGroup(groupKey)}>
                           {expandedGroups[groupKey] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -473,44 +467,44 @@ export default function TravauxPage() {
                                 onUnschedule={handleUnscheduleTask}
                               />
                             </Grid>
-                          ))
+                          ))}
                         </Grid>
                       </Collapse>
                     </Grid>
                   );
-                  })
+                })}
 
-              {filteredTasks.filter(t => !t.parent).map(task => (
-                <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
-                  <TaskCard
-                    task={task}
-                    onStatusChange={handleStatusChange}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onSchedule={(zone, titre, startDate, duration) => {
-                      setTaskToSchedule(task);
-                      setStartDate(dayjs(startDate));
-                      setDuration(duration);
-                      handleScheduleTask();
-                    }}
-                    onUnschedule={handleUnscheduleTask}
-                  />
-                </Grid>
-              ))
+              {filteredTasks
+                .filter(t => !t.parent)
+                .map(task => (
+                  <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
+                    <TaskCard
+                      task={task}
+                      onStatusChange={handleStatusChange}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onSchedule={(zone, titre, startDate, duration) => {
+                        setTaskToSchedule(task);
+                        setStartDate(dayjs(startDate));
+                        setDuration(duration);
+                        handleScheduleTask();
+                      }}
+                      onUnschedule={handleUnscheduleTask}
+                    />
+                  </Grid>
+                ))}
             </>
           ) : (
             <Grid item xs={12}>
               <Paper sx={{ p: 3, textAlign: 'center' }}>
-                <Typography variant="body1">
-                  Aucune tâche trouvée avec les filtres actuels.
-                </Typography>
+                <Typography variant="body1">Aucune tâche trouvée avec les filtres actuels.</Typography>
               </Paper>
             </Grid>
           )}
         </Grid>
       </motion.div>
 
-      {/* Dialogue d'ajout de tâche */}
+      {/* Add Task Dialog */}
       <Dialog open={addDialogOpen} onClose={handleAddDialogClose} fullWidth maxWidth="sm">
         <DialogTitle>Ajouter une nouvelle tâche</DialogTitle>
         <DialogContent>
@@ -521,22 +515,18 @@ export default function TravauxPage() {
             fullWidth
             variant="outlined"
             value={newTask.titre}
-            onChange={(e) => setNewTask({ ...newTask, titre: e.target.value })}
+            onChange={e => setNewTask({ ...newTask, titre: e.target.value })}
             sx={{ mb: 2, mt: 1 }}
           />
-          
+
           <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>Zone</InputLabel>
-            <Select
-              value={selectedZone}
-              label="Zone"
-              onChange={(e) => setSelectedZone(e.target.value)}
-            >
-              {zones.map((zone) => (
+            <Select value={selectedZone} label="Zone" onChange={e => setSelectedZone(e.target.value)}>
+              {zones.map(zone => (
                 <MenuItem key={zone} value={zone}>
                   {zone}
                 </MenuItem>
-              ))
+              ))}
             </Select>
           </FormControl>
 
@@ -546,16 +536,16 @@ export default function TravauxPage() {
             fullWidth
             variant="outlined"
             value={newTask.parent}
-            onChange={(e) => setNewTask({ ...newTask, parent: e.target.value })}
+            onChange={e => setNewTask({ ...newTask, parent: e.target.value })}
             sx={{ mb: 2 }}
           />
-          
+
           <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>Priorité</InputLabel>
             <Select
               value={newTask.priorité}
               label="Priorité"
-              onChange={(e) => setNewTask({ ...newTask, priorité: e.target.value })}
+              onChange={e => setNewTask({ ...newTask, priorité: e.target.value })}
             >
               <MenuItem value="Élevée">Élevée</MenuItem>
               <MenuItem value="Moyenne">Moyenne</MenuItem>
@@ -563,7 +553,7 @@ export default function TravauxPage() {
               <MenuItem value="Faible">Faible</MenuItem>
             </Select>
           </FormControl>
-          
+
           <TextField
             margin="dense"
             label="Durée estimée (jours)"
@@ -572,7 +562,7 @@ export default function TravauxPage() {
             type="number"
             inputProps={{ min: 0.1, step: 0.1 }}
             value={newTask.durée_estimée}
-            onChange={(e) => setNewTask({ ...newTask, durée_estimée: parseFloat(e.target.value) })}
+            onChange={e => setNewTask({ ...newTask, durée_estimée: parseFloat(e.target.value) })}
           />
         </DialogContent>
         <DialogActions>
@@ -583,7 +573,7 @@ export default function TravauxPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Dialogue de planification */}
+      {/* Schedule Dialog */}
       <Dialog open={scheduleDialogOpen} onClose={handleScheduleDialogClose} fullWidth maxWidth="sm">
         <DialogTitle>Planifier la tâche</DialogTitle>
         <DialogContent>
@@ -596,7 +586,7 @@ export default function TravauxPage() {
               <DatePicker
                 label="Date de début"
                 value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
+                onChange={newValue => setStartDate(newValue)}
                 sx={{ width: '100%', mb: 3 }}
               />
               <TextField
@@ -607,7 +597,7 @@ export default function TravauxPage() {
                 type="number"
                 inputProps={{ min: 0.1, step: 0.1 }}
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={e => setDuration(e.target.value)}
               />
             </Box>
           )}
@@ -621,4 +611,4 @@ export default function TravauxPage() {
       </Dialog>
     </Layout>
   );
-} 
+}
