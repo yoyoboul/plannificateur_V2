@@ -15,13 +15,20 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import dayjs from 'dayjs';
 
 export default function CoursesPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [items, setItems] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState({ magasin: '', produit: '', lien: '', prix: '', date: dayjs().format('YYYY-MM-DD') });
@@ -65,41 +72,71 @@ export default function CoursesPage() {
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>Ajouter</Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Magasin</TableCell>
-              <TableCell>Produit</TableCell>
-              <TableCell>Lien</TableCell>
-              <TableCell>Prix</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map(item => (
-              <TableRow key={item._id}>
-                <TableCell>{dayjs(item.date).format('DD/MM/YYYY')}</TableCell>
-                <TableCell>{item.magasin}</TableCell>
-                <TableCell>{item.produit}</TableCell>
-                <TableCell>{item.lien && <a href={item.lien} target="_blank" rel="noopener noreferrer">Lien</a>}</TableCell>
-                <TableCell>{item.prix}</TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleDelete(item._id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {items.length === 0 && (
+      {isMobile ? (
+        <List>
+          {items.map(item => (
+            <ListItem key={item._id} divider sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+              <Box display="flex" width="100%" justifyContent="space-between" alignItems="center">
+                <Typography variant="body2">{dayjs(item.date).format('DD/MM/YYYY')}</Typography>
+                <IconButton onClick={() => handleDelete(item._id)} size="small">
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography variant="subtitle1">{item.produit}</Typography>
+              {item.magasin && (
+                <Typography variant="body2" color="text.secondary">{item.magasin}</Typography>
+              )}
+              {item.lien && (
+                <Typography variant="body2" component="span">
+                  <a href={item.lien} target="_blank" rel="noopener noreferrer">Lien</a>
+                </Typography>
+              )}
+              {item.prix && <Typography variant="body2" fontWeight="bold">{item.prix}</Typography>}
+            </ListItem>
+          ))}
+          {items.length === 0 && (
+            <ListItem>
+              <ListItemText primary="Aucun article" />
+            </ListItem>
+          )}
+        </List>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={6} align="center">Aucun article</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Magasin</TableCell>
+                <TableCell>Produit</TableCell>
+                <TableCell>Lien</TableCell>
+                <TableCell>Prix</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {items.map(item => (
+                <TableRow key={item._id}>
+                  <TableCell>{dayjs(item.date).format('DD/MM/YYYY')}</TableCell>
+                  <TableCell>{item.magasin}</TableCell>
+                  <TableCell>{item.produit}</TableCell>
+                  <TableCell>{item.lien && <a href={item.lien} target="_blank" rel="noopener noreferrer">Lien</a>}</TableCell>
+                  <TableCell>{item.prix}</TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={() => handleDelete(item._id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">Aucun article</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Nouvel article</DialogTitle>
