@@ -18,10 +18,16 @@ import {
   Select,
   MenuItem,
   IconButton,
+  Collapse,
   Paper,
   Divider,
 } from '@mui/material';
-import { Add as AddIcon, FilterList as FilterIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  FilterList as FilterIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
+} from '@mui/icons-material';
 import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
 import { motion } from 'framer-motion';
@@ -47,6 +53,7 @@ export default function TravauxPage() {
   const [taskToSchedule, setTaskToSchedule] = useState(null);
   const [startDate, setStartDate] = useState(dayjs());
   const [duration, setDuration] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     // Charger les tâches et les zones
@@ -359,6 +366,13 @@ export default function TravauxPage() {
     }
   };
 
+  const handleToggleGroup = (key) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
   return (
     <Layout>
       <Box sx={{ mb: 4 }}>
@@ -424,32 +438,44 @@ export default function TravauxPage() {
               {tasks
                 .filter(t => t.isGroup)
                 .map(group => {
-                  const sub = filteredTasks.filter(t => t.parent === group.titre && t.zone === group.zone);
+                  const sub = filteredTasks.filter(
+                    t => t.parent === group.titre && t.zone === group.zone
+                  );
                   if (sub.length === 0) return null;
+                  const groupKey = `${group.zone}-${group.titre}`;
                   return (
-                    <Grid item xs={12} key={`group-${group.zone}-${group.titre}`}>
-                      <Paper sx={{ p: 2, backgroundColor: 'grey.100', mb: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{group.titre}</Typography>
+                    <Grid item xs={12} key={`group-${groupKey}`}>
+                      <Paper
+                        sx={{ p: 2, backgroundColor: 'grey.100', mb: 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <IconButton size="small" onClick={() => handleToggleGroup(groupKey)}>
+                          {expandedGroups[groupKey] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', ml: 1 }}>
+                          {group.titre}
+                        </Typography>
                       </Paper>
-                      <Grid container spacing={2} sx={{ pl: 2 }}>
-                        {sub.map(task => (
-                          <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
-                            <TaskCard
-                              task={task}
-                              onStatusChange={handleStatusChange}
-                              onEdit={handleEdit}
-                              onDelete={handleDelete}
-                              onSchedule={(zone, titre, startDate, duration) => {
-                                setTaskToSchedule(task);
-                                setStartDate(dayjs(startDate));
-                                setDuration(duration);
-                                handleScheduleTask();
-                              }}
-                              onUnschedule={handleUnscheduleTask}
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
+                      <Collapse in={!!expandedGroups[groupKey]} timeout="auto" unmountOnExit>
+                        <Grid container spacing={2} sx={{ pl: 2 }}>
+                          {sub.map(task => (
+                            <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
+                              <TaskCard
+                                task={task}
+                                onStatusChange={handleStatusChange}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onSchedule={(zone, titre, startDate, duration) => {
+                                  setTaskToSchedule(task);
+                                  setStartDate(dayjs(startDate));
+                                  setDuration(duration);
+                                  handleScheduleTask();
+                                }}
+                                onUnschedule={handleUnscheduleTask}
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Collapse>
                     </Grid>
                   );
                 })}
