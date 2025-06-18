@@ -134,12 +134,13 @@ export default function AgendaPage() {
           tasksRes.json(),
           zonesRes.json(),
         ]);
-        
+
+        const realTasks = tasksData.filter(t => !t.isGroup);
         setScheduledTasks(scheduledData);
-        setAllTasks(tasksData);
-        
+        setAllTasks(realTasks);
+
         // Filtrer les tâches non planifiées
-        const unscheduled = tasksData.filter(task => !task.date_début);
+        const unscheduled = realTasks.filter(task => !task.date_début);
         setUnscheduledTasks(unscheduled);
         
         setZones(zonesData);
@@ -223,12 +224,13 @@ export default function AgendaPage() {
           scheduledRes.json(),
           tasksRes.json(),
         ]);
-        
+
+        const realTasks = tasksData.filter(t => !t.isGroup);
         setScheduledTasks(scheduledData);
-        setAllTasks(tasksData);
-        
+        setAllTasks(realTasks);
+
         // Mettre à jour les tâches non planifiées
-        const unscheduled = tasksData.filter(task => !task.date_début);
+        const unscheduled = realTasks.filter(task => !task.date_début);
         setUnscheduledTasks(unscheduled);
         
         // Mettre à jour les tâches pour le jour sélectionné
@@ -283,12 +285,13 @@ export default function AgendaPage() {
           if (scheduledRes.ok && tasksRes.ok) {
             const scheduledData = await scheduledRes.json();
             const tasksData = await tasksRes.json();
-            
+
+            const realTasks = tasksData.filter(t => !t.isGroup);
             setScheduledTasks(scheduledData);
-            setAllTasks(tasksData);
-            
+            setAllTasks(realTasks);
+
             // Mettre à jour les tâches non planifiées
-            const unscheduled = tasksData.filter(task => !task.date_début);
+            const unscheduled = realTasks.filter(task => !task.date_début);
             setUnscheduledTasks(unscheduled);
             
             // Mettre à jour les tâches pour le jour sélectionné
