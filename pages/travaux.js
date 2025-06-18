@@ -473,12 +473,12 @@ export default function TravauxPage() {
                                 onUnschedule={handleUnscheduleTask}
                               />
                             </Grid>
-                          ))}
+                          ))
                         </Grid>
                       </Collapse>
                     </Grid>
                   );
-                })}
+                  })
 
               {filteredTasks.filter(t => !t.parent).map(task => (
                 <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
@@ -496,7 +496,7 @@ export default function TravauxPage() {
                     onUnschedule={handleUnscheduleTask}
                   />
                 </Grid>
-              ))}
+              ))
             </>
           ) : (
             <Grid item xs={12}>
@@ -536,7 +536,7 @@ export default function TravauxPage() {
                 <MenuItem key={zone} value={zone}>
                   {zone}
                 </MenuItem>
-              ))}
+              ))
             </Select>
           </FormControl>
 
