@@ -71,19 +71,20 @@ export default function RapportPage() {
           tasksRes.json(),
           statsRes.json(),
         ]);
-        
-        setTasks(tasksData);
+
+        const realTasks = tasksData.filter(t => !t.isGroup);
+        setTasks(realTasks);
         setStats(statsData);
         
         // Calculer les statistiques par priorité
         const priorityData = {};
-        tasksData.forEach(task => {
+        realTasks.forEach(task => {
           priorityData[task.priorité] = (priorityData[task.priorité] || 0) + 1;
         });
         setPriorityStats(priorityData);
         
         // Filtrer les tâches à priorité élevée non terminées
-        const highPriority = tasksData.filter(task => task.priorité === 'Élevée' && task.statut !== 'Terminé');
+        const highPriority = realTasks.filter(task => task.priorité === 'Élevée' && task.statut !== 'Terminé');
         setHighPriorityTasks(highPriority);
         
         setLoading(false);
