@@ -201,6 +201,14 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, onSch
               variant="outlined"
               sx={{ borderRadius: 1 }}
             />
+            {task.parent && (
+              <Chip
+                label={task.parent}
+                size="small"
+                variant="outlined"
+                sx={{ borderRadius: 1 }}
+              />
+            )}
             <Chip
               label={task.statut}
               size="small"
@@ -273,6 +281,15 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, onSch
               <MenuItem value="Faible">Faible</MenuItem>
             </Select>
           </FormControl>
+          <TextField
+            margin="dense"
+            label="Groupe"
+            fullWidth
+            variant="outlined"
+            value={editedTask.parent || ''}
+            onChange={(e) => setEditedTask({ ...editedTask, parent: e.target.value })}
+            sx={{ mb: 2 }}
+          />
           <TextField
             margin="dense"
             label="Durée estimée (jours)"

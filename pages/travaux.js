@@ -18,13 +18,19 @@ import {
   Select,
   MenuItem,
   IconButton,
+  Collapse,
   Paper,
   Divider,
 } from '@mui/material';
-import { Add as AddIcon, FilterList as FilterIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  FilterList as FilterIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
+} from '@mui/icons-material';
 import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
-import { motion } from 'framer-motion';
+import { motion, Reorder } from 'framer-motion';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
@@ -40,12 +46,14 @@ export default function TravauxPage() {
     statut: 'À faire',
     priorité: 'Moyenne',
     durée_estimée: 1,
+    parent: '',
   });
   const [selectedZone, setSelectedZone] = useState('');
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [taskToSchedule, setTaskToSchedule] = useState(null);
   const [startDate, setStartDate] = useState(dayjs());
   const [duration, setDuration] = useState(1);
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     // Charger les tâches et les zones
@@ -62,7 +70,7 @@ export default function TravauxPage() {
         ]);
 
         setTasks(tasksData);
-        setFilteredTasks(tasksData);
+        setFilteredTasks(tasksData.filter(t => !t.isGroup));
         setZones(zonesData);
         
         if (zonesData.length > 0) {
@@ -83,7 +91,7 @@ export default function TravauxPage() {
     
     if (newValue === 0) {
       // Tous les travaux
-      setFilteredTasks(tasks);
+      setFilteredTasks(tasks.filter(t => !t.isGroup));
     } else {
       // Filtrer par statut
       const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
@@ -104,6 +112,7 @@ export default function TravauxPage() {
       statut: 'À faire',
       priorité: 'Moyenne',
       durée_estimée: 1,
+      parent: '',
     });
   };
 
@@ -129,10 +138,10 @@ export default function TravauxPage() {
         const tasksRes = await fetch('/api/tasks');
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
-        
+
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -175,7 +184,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -217,7 +226,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -253,7 +262,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(updatedTasks);
+          setFilteredTasks(updatedTasks.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -305,7 +314,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -343,7 +352,7 @@ export default function TravauxPage() {
         
         // Appliquer le filtre actuel
         if (tabValue === 0) {
-          setFilteredTasks(tasksData);
+          setFilteredTasks(tasksData.filter(t => !t.isGroup));
         } else {
           const statuses = ['À faire', 'En cours', 'En attente', 'Terminé'];
           const selectedStatus = statuses[tabValue - 1];
@@ -354,6 +363,35 @@ export default function TravauxPage() {
       }
     } catch (error) {
       console.error('Erreur lors de la déplanification de la tâche:', error);
+    }
+  };
+
+  const handleToggleGroup = (key) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleReorder = async (newOrder) => {
+    const orderPayload = newOrder.map(t => ({ zone: t.zone, titre: t.titre }));
+    const grouped = filteredTasks.filter(t => t.parent);
+    setFilteredTasks([...grouped, ...newOrder]);
+
+    try {
+      await fetch('/api/tasks/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order: orderPayload }),
+      });
+
+      const tasksRes = await fetch('/api/tasks');
+      const tasksData = await tasksRes.json();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Erreur lors du réordonnancement:', error);
     }
   };
 
@@ -418,23 +456,79 @@ export default function TravauxPage() {
       >
         <Grid container spacing={2}>
           {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
-                <TaskCard
-                  task={task}
-                  onStatusChange={handleStatusChange}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onSchedule={(zone, titre, startDate, duration) => {
-                    setTaskToSchedule(task);
-                    setStartDate(dayjs(startDate));
-                    setDuration(duration);
-                    handleScheduleTask();
-                  }}
-                  onUnschedule={handleUnscheduleTask}
-                />
-              </Grid>
-            ))
+            <>
+              {tasks
+                .filter(t => t.isGroup)
+                .map(group => {
+                  const sub = filteredTasks.filter(
+                    t => t.parent === group.titre && t.zone === group.zone
+                  );
+                  if (sub.length === 0) return null;
+                  const groupKey = `${group.zone}-${group.titre}`;
+                  return (
+                    <Grid item xs={12} key={`group-${groupKey}`}>
+                      <Paper
+                        sx={{ p: 2, backgroundColor: 'grey.100', mb: 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <IconButton size="small" onClick={() => handleToggleGroup(groupKey)}>
+                          {expandedGroups[groupKey] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', ml: 1 }}>
+                          {group.titre}
+                        </Typography>
+                      </Paper>
+                      <Collapse in={!!expandedGroups[groupKey]} timeout="auto" unmountOnExit>
+                        <Grid container spacing={2} sx={{ pl: 2 }}>
+                          {sub.map(task => (
+                            <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
+                              <TaskCard
+                                task={task}
+                                onStatusChange={handleStatusChange}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onSchedule={(zone, titre, startDate, duration) => {
+                                  setTaskToSchedule(task);
+                                  setStartDate(dayjs(startDate));
+                                  setDuration(duration);
+                                  handleScheduleTask();
+                                }}
+                                onUnschedule={handleUnscheduleTask}
+                              />
+                            </Grid>
+                          ))
+                        </Grid>
+                      </Collapse>
+                    </Grid>
+                  );
+                  })
+
+              <Reorder.Group
+                axis="y"
+                values={filteredTasks.filter(t => !t.parent)}
+                onReorder={handleReorder}
+                style={{ width: '100%' }}
+              >
+                {filteredTasks.filter(t => !t.parent).map(task => (
+                  <Reorder.Item key={`${task.zone}-${task.titre}`} value={task} style={{ listStyle: 'none' }}>
+                    <Grid item xs={12}>
+                      <TaskCard
+                        task={task}
+                        onStatusChange={handleStatusChange}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onSchedule={(zone, titre, startDate, duration) => {
+                          setTaskToSchedule(task);
+                          setStartDate(dayjs(startDate));
+                          setDuration(duration);
+                          handleScheduleTask();
+                        }}
+                        onUnschedule={handleUnscheduleTask}
+                      />
+                    </Grid>
+                  </Reorder.Item>
+                ))
+              </Reorder.Group>
+            </>
           ) : (
             <Grid item xs={12}>
               <Paper sx={{ p: 3, textAlign: 'center' }}>
@@ -473,9 +567,19 @@ export default function TravauxPage() {
                 <MenuItem key={zone} value={zone}>
                   {zone}
                 </MenuItem>
-              ))}
+              ))
             </Select>
           </FormControl>
+
+          <TextField
+            margin="dense"
+            label="Groupe (optionnel)"
+            fullWidth
+            variant="outlined"
+            value={newTask.parent}
+            onChange={(e) => setNewTask({ ...newTask, parent: e.target.value })}
+            sx={{ mb: 2 }}
+          />
           
           <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>Priorité</InputLabel>

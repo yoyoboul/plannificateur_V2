@@ -139,13 +139,14 @@ export default function Dashboard() {
           statsRes.json(),
         ]);
 
-        setTasks(tasksData);
+        const realTasks = tasksData.filter(t => !t.isGroup);
+        setTasks(realTasks);
         setZones(zonesData);
         setStats(statsData);
 
         // Filtrer les tâches pour aujourd'hui
         const today = new Date().toISOString().split('T')[0];
-        const todayTasksData = tasksData.filter((task) => {
+        const todayTasksData = realTasks.filter((task) => {
           if (!task.date_début || !task.date_fin) return false;
           const startDate = new Date(task.date_début).toISOString().split('T')[0];
           const endDate = new Date(task.date_fin).toISOString().split('T')[0];
@@ -154,7 +155,7 @@ export default function Dashboard() {
         setTodayTasks(todayTasksData);
 
         // Filtrer les tâches prioritaires non planifiées
-        const priorityTasksData = tasksData.filter((task) => 
+        const priorityTasksData = realTasks.filter((task) =>
           task.priorité === 'Élevée' && 
           task.statut !== 'Terminé' && 
           !task.date_début
@@ -162,7 +163,7 @@ export default function Dashboard() {
         setPriorityTasks(priorityTasksData);
 
         // Filtrer les tâches à venir (planifiées pour les prochains jours)
-        const upcomingTasksData = tasksData.filter((task) => {
+        const upcomingTasksData = realTasks.filter((task) => {
           if (!task.date_début) return false;
           const startDate = new Date(task.date_début);
           const todayDate = new Date();
