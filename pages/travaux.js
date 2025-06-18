@@ -25,7 +25,7 @@ import {
 import {
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
+import { motion, Reorder } from 'framer-motion';
 } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import TaskCard from '../components/TaskCard';
@@ -358,6 +358,28 @@ export default function TravauxPage() {
     }
   };
 
+  const handleReorder = async (newOrder) => {
+    const orderPayload = newOrder.map(t => ({ zone: t.zone, titre: t.titre }));
+    const grouped = filteredTasks.filter(t => t.parent);
+    setFilteredTasks([...grouped, ...newOrder]);
+
+    try {
+      await fetch('/api/tasks/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order: orderPayload }),
+      });
+
+      const tasksRes = await fetch('/api/tasks');
+      const tasksData = await tasksRes.json();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Erreur lors du réordonnancement:', error);
+    }
+  };
+
   const handleToggleGroup = key => {
     setExpandedGroups(prev => ({
       ...prev,
@@ -467,23 +489,32 @@ export default function TravauxPage() {
                                 onUnschedule={handleUnscheduleTask}
                               />
                             </Grid>
-                          ))}
-                        </Grid>
-                      </Collapse>
+              <Reorder.Group
+                axis="y"
+                values={filteredTasks.filter(t => !t.parent)}
+                onReorder={handleReorder}
+                style={{ width: '100%' }}
+              >
+                {filteredTasks.filter(t => !t.parent).map(task => (
+                  <Reorder.Item key={`${task.zone}-${task.titre}`} value={task} style={{ listStyle: 'none' }}>
+                    <Grid item xs={12}>
+                      <TaskCard
+                        task={task}
+                        onStatusChange={handleStatusChange}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onSchedule={(zone, titre, startDate, duration) => {
+                          setTaskToSchedule(task);
+                          setStartDate(dayjs(startDate));
+                          setDuration(duration);
+                          handleScheduleTask();
+                        }}
+                        onUnschedule={handleUnscheduleTask}
+                      />
                     </Grid>
-                  );
-                })}
-
-              {filteredTasks
-                .filter(t => !t.parent)
-                .map(task => (
-                  <Grid item xs={12} key={`${task.zone}-${task.titre}`}>
-                    <TaskCard
-                      task={task}
-                      onStatusChange={handleStatusChange}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onSchedule={(zone, titre, startDate, duration) => {
+                  </Reorder.Item>
+                ))
+              </Reorder.Group>
                         setTaskToSchedule(task);
                         setStartDate(dayjs(startDate));
                         setDuration(duration);
